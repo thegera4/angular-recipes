@@ -25,6 +25,7 @@ export class RecipeService {
 
   /**
    * Method to get a copy of the array so that the original array is not modified
+   * @returns Copy of the recipes array
   */
   getRecipes() {
     return this.recipes.slice()
@@ -36,6 +37,15 @@ export class RecipeService {
   */
   addIngredientsToShoppingList(ingredients: Ingredient[]) {
     this.shoppingListService.addIngredients(ingredients)
+  }
+
+  /**
+   * Method to get a recipe by its id (for the recipe details view)
+   * @param id
+   * @returns Recipe details
+  */
+  getRecipeById(id: number) {
+    return this.recipes[id]
   }
 
 }

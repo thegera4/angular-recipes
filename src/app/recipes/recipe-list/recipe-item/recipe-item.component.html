@@ -1,7 +1,8 @@
 <div 
   class="card mb-3" 
-  style="max-width: 400px; max-height: 350; cursor: pointer;"
-  (click)="onSelectedRecipe()"
+  style="max-width: 400px; max-height: 350; cursor: pointer;" 
+  [routerLink]="[index]" 
+  routerLinkActive="active"
 >
   <div class="row g-0">
     <div class="col-md-4">
