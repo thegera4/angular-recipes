@@ -5,11 +5,17 @@
   </div>
 </div>
 <br/>
+<!-- Spinner/Loader -->
+<div *ngIf="isFetching" class="spinner-container">
+  <div class="spinner-border" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
 <!-- Recipe Item Card Group-->
-<div class="row">
+<div class="row" *ngIf="!isFetching">
   <div class="col-xs-12">
-    <app-recipe-item 
-      *ngFor="let recipeElement of recipes; let i = index" 
+    <app-recipe-item
+      *ngFor="let recipeElement of recipes; let i = index"
       [recipe]="recipeElement"
       [index]="i"
     ></app-recipe-item>

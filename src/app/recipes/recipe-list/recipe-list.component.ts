@@ -12,16 +12,25 @@ import { Subscription } from 'rxjs'
 export class RecipeListComponent implements OnInit, OnDestroy {
   recipes: Recipe[] = []
   recipesChangedSub: Subscription
+  isFetching: boolean = false
 
   constructor(private recipeService: RecipeService, private router: Router, private route: ActivatedRoute) {}
 
   ngOnInit() {
-    this.recipes = this.recipeService.getRecipes()
-    this.recipesChangedSub = this.recipeService.recipesChanged.subscribe(
-      (recipes: Recipe[]) => {
+    this.isFetching = true
+    this.recipeService.fetchRecipes().subscribe(
+      recipes => {
+        this.isFetching = false
         this.recipes = recipes
       }
     )
+    this.recipesChangedSub = this.recipeService.recipesChanged
+      .subscribe(
+        (recipes: Recipe[]) => {
+          this.recipes = recipes
+          this.isFetching = false
+        }
+      )
   }
 
   onNewRecipe() {
@@ -31,5 +40,4 @@ export class RecipeListComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.recipesChangedSub.unsubscribe()
   }
-
 }

@@ -3,39 +3,21 @@ import { Recipe } from "./recipe.model"
 import { Ingredient } from "../shared/ingredient.model"
 import { ShoppingListService } from "../shopping-list/shopping-list.service"
 import { Subject } from "rxjs"
+import {HttpClient} from "@angular/common/http";
+import {map, tap} from "rxjs/operators";
 
 @Injectable()
 export class RecipeService {
-  private recipes: Recipe[] = [
-    new Recipe(
-      'Home Made Pizza', 
-      'Classsic, Delicious Pizza', 
-      'https://www.simplyrecipes.com/thmb/KRw_r32s4gQeOX-d07NWY1OlOFk=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/Simply-Recipes-Homemade-Pizza-Dough-Lead-Shot-1c-c2b1885d27d4481c9cfe6f6286a64342.jpg',
-      [new Ingredient('Dough', 1), new Ingredient('Tomato Sauce Can', 1), new Ingredient('Mozzarella Cheese', 3)]
-    ),
-    new Recipe(
-      'Tasy Shakshuka', 
-      'You will not regret trying this!', 
-      'https://i2.wp.com/www.downshiftology.com/wp-content/uploads/2023/12/Shakshuka-main-1.jpg',
-      [new Ingredient('Eggs', 2), new Ingredient('Tomatoes', 4), new Ingredient('Onions', 1)]
-    )
-  ]
+  baseURL: string = 'https://angular-http-requests-c9796-default-rtdb.firebaseio.com/'
+  recipesUrlPath: string = 'recipes.json'
+  private recipes: Recipe[] = []
+  recipesChanged: Subject<Recipe[]> = new Subject<Recipe[]>()
 
-  recipesChanged = new Subject<Recipe[]>()
-
-  constructor(private shoppingListService: ShoppingListService) {}
-
-  /**
-   * Method to get a copy of the array so that the original array is not modified
-   * @returns Copy of the recipes array
-  */
-  getRecipes() {
-    return this.recipes.slice()
-  }
+  constructor(private shoppingListService: ShoppingListService, private http: HttpClient) {}
 
   /**
    * Method to add ingredients to the shopping list when the user clicks on the 'Add to Shopping List' button from the recipe detail page
-   * @param ingredients 
+   * @param ingredients
   */
   addIngredientsToShoppingList(ingredients: Ingredient[]) {
     this.shoppingListService.addIngredients(ingredients)
@@ -52,7 +34,7 @@ export class RecipeService {
 
   /**
    * Method to add a new recipe
-   * @param recipe 
+   * @param recipe
   */
   addRecipe(recipe: Recipe) {
     this.recipes.push(recipe)
@@ -61,8 +43,8 @@ export class RecipeService {
 
   /**
    * Method to update a recipe
-   * @param index 
-   * @param newRecipe 
+   * @param index
+   * @param newRecipe
   */
   updateRecipe(index: number, newRecipe: Recipe) {
     this.recipes[index] = newRecipe
@@ -71,11 +53,59 @@ export class RecipeService {
 
   /**
    * Method to delete a recipe
-   * @param index 
+   * @param index
   */
   deleteRecipe(index: number) {
     this.recipes.splice(index, 1)
     this.recipesChanged.next(this.recipes.slice())
   }
 
+  /**
+   * Method to store recipes in the database
+  */
+  storeRecipes() {
+    const recipes: Recipe[] = this.recipes
+    this.http.put(this.baseURL + this.recipesUrlPath, recipes)
+      .subscribe(response => {
+        console.log(response)
+      })
+  }
+
+  /**
+   * Method to fetch recipes from the database
+   * @returns Observable of recipes
+  */
+  fetchRecipes() {
+    return this.http.get<Recipe[]>(this.baseURL + this.recipesUrlPath)
+      .pipe(
+        map(recipes => {
+          return recipes.map(recipe => {
+            return {
+              ...recipe,
+              ingredients: recipe.ingredients ? recipe.ingredients : []
+            }
+          })
+        }),
+        tap(recipes => {
+          this.setRecipes(recipes)
+        })
+      )
+  }
+
+  /**
+   * Method to set recipes
+   * @param recipes
+  */
+  setRecipes(recipes: Recipe[]) {
+    this.recipes = recipes
+    this.recipesChanged.next(this.recipes.slice())
+  }
+
+  /**
+   * Method to get all recipes
+   * @returns Array of recipes
+  */
+  getRecipes() {
+    return this.recipes.slice()
+  }
 }
