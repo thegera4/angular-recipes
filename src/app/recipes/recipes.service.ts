@@ -3,8 +3,9 @@ import { Recipe } from "./recipe.model"
 import { Ingredient } from "../shared/ingredient.model"
 import { ShoppingListService } from "../shopping-list/shopping-list.service"
 import { Subject } from "rxjs"
-import {HttpClient} from "@angular/common/http";
-import {map, tap} from "rxjs/operators";
+import {HttpClient, HttpParams} from "@angular/common/http";
+import {exhaustMap, map, take, tap} from "rxjs/operators";
+import {AuthService} from "../auth/auth.service";
 
 @Injectable()
 export class RecipeService {
@@ -13,7 +14,11 @@ export class RecipeService {
   private recipes: Recipe[] = []
   recipesChanged: Subject<Recipe[]> = new Subject<Recipe[]>()
 
-  constructor(private shoppingListService: ShoppingListService, private http: HttpClient) {}
+  constructor(
+    private shoppingListService: ShoppingListService,
+    private http: HttpClient,
+    private authService: AuthService
+  ) {}
 
   /**
    * Method to add ingredients to the shopping list when the user clicks on the 'Add to Shopping List' button from the recipe detail page
@@ -72,13 +77,13 @@ export class RecipeService {
   }
 
   /**
-   * Method to fetch recipes from the database
+   * Method to fetch recipes from the database. The AuthInterceptorService is used to add the token to all requests.
    * @returns Observable of recipes
   */
   fetchRecipes() {
     return this.http.get<Recipe[]>(this.baseURL + this.recipesUrlPath)
       .pipe(
-        map(recipes => {
+        map(recipes => { // Map (do some operation in) the response to ensure that we have an ingredients array
           return recipes.map(recipe => {
             return {
               ...recipe,
@@ -86,7 +91,7 @@ export class RecipeService {
             }
           })
         }),
-        tap(recipes => {
+        tap(recipes => { // Tap (do something with the response w/o changing it) into the observable to set the recipes
           this.setRecipes(recipes)
         })
       )
